@@ -3,6 +3,10 @@
 
 NeuralNetwork *nn;
 
+float pi = 3.14159265;
+float freq = 0.5;
+float period = (1 / freq) * (1000000);
+
 void setup()
 {
   Serial.begin(115200);
@@ -11,19 +15,18 @@ void setup()
 
 void loop()
 {
-  float number1 = random(100) / 100.0;
-  float number2 = random(100) / 100.0;
+  unsigned long timestamp = micros();
+  timestamp = timestamp % (unsigned long)period;
 
-  nn->getInputBuffer()[0] = number1;
-  nn->getInputBuffer()[1] = number2;
+  float x_val = ((float)timestamp * 2 * pi) / period;
+  nn->getInputBuffer()[0] = x_val;
 
   float result = nn->predict();
+  float y_val = result;
 
-  const char *expected = number2 > number1 ? "True" : "False";
-
-  const char *predicted = result > 0.5 ? "True" : "False";
-
-  Serial.printf("%.2f %.2f - result %.2f - Expected %s, Predicted %s\n", number1, number2, result, expected, predicted);
-
-  delay(1000);
+  Serial.print(x_val);
+  Serial.print("\n");
+  Serial.print(y_val);
+  Serial.print("\n");
+  delay(200);
 }

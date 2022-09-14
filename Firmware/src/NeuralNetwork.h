@@ -20,9 +20,9 @@ private:
     tflite::MicroMutableOpResolver<10> *resolver;
     tflite::ErrorReporter *error_reporter;
     const tflite::Model *model;
-    tflite::MicroInterpreter *interpreter;
-    TfLiteTensor *input;
-    TfLiteTensor *output;
+    tflite::MicroInterpreter *interpreter = nullptr;
+    TfLiteTensor *input = nullptr;
+    TfLiteTensor *output = nullptr;
     uint8_t *tensor_arena;
 
 public:

@@ -6,13 +6,13 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-const int kArenaSize = 20000;
+const int kArenaSize = 5 * 1024;
 
 NeuralNetwork::NeuralNetwork()
 {
     error_reporter = new tflite::MicroErrorReporter();
 
-    model = tflite::GetModel(converted_model_tflite);
+    model = tflite::GetModel(g_model);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Model provided is schema version %d not equal to supported version %d.",
