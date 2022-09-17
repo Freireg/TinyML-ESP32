@@ -4,7 +4,7 @@
 NeuralNetwork *nn;
 
 float pi = 3.14159265;
-float freq = 0.5;
+float freq = 100;
 float period = (1 / freq) * (1000000);
 
 void setup()
@@ -22,11 +22,11 @@ void loop()
   nn->getInputBuffer()[0] = x_val;
 
   float result = nn->predict();
-  float y_val = result;
 
+  Serial.print("\nX Value: ");
   Serial.print(x_val);
-  Serial.print("\n");
-  Serial.print(y_val);
-  Serial.print("\n");
+  Serial.print("\nResult: ");
+  Serial.print(result);
+
   delay(200);
 }

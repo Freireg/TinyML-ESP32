@@ -1,12 +1,12 @@
 #include "NeuralNetwork.h"
-#include "model_data.h"
+#include "model.h"
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-const int kArenaSize = 5 * 1024;
+const int kArenaSize = 20 * 1024;
 
 NeuralNetwork::NeuralNetwork()
 {
