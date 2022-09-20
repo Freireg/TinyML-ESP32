@@ -2,9 +2,6 @@
 
 NeuralNetwork *nn;
 
-float pi = 3.14159265;
-float freq = 100;
-float period = (1 / freq) * (1000000);
 
 void setup()
 {
@@ -15,4 +12,9 @@ void setup()
 void loop()
 {
   nn->RunInference();
+  Serial.print(nn->Result8);
+  Serial.print("\n");
+  //Serial.print(nn->Result);
+  //Serial.print("\n");
+  delay(125);
 }

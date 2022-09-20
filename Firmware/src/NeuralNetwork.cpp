@@ -7,7 +7,11 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-const int kArenaSize = 20 * 1024;
+const int kArenaSize = 25 * 1024;
+
+float pi = 3.14159265;
+float freq = 150;
+float period = (1 / freq) * (1000000);
 
 NeuralNetwork::NeuralNetwork()
 {
@@ -69,20 +73,18 @@ float NeuralNetwork::predict()
 
 void NeuralNetwork::RunInference(void)
 {
-    float x_val = 2;
-    input->data.f[0];
+		unsigned long timestamp = micros();
+  	timestamp = timestamp % (unsigned long)period;
+		float x_val = ((float)timestamp * 2 * pi) / period;
 
-    TfLiteStatus InvokeStatus = interpreter->Invoke();
-    if (InvokeStatus != kTfLiteOk) {
-		TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed on x: %f\n",
-				     static_cast < double > (x_val));
-		return;
-	}
-    float result = output->data.f[0];
+		int8_t x = x_val/(input->params.scale + input->params.zero_point);
+		//input->data.f[0] = x_val;
+		input->data.int8[0] = x_val;
+		interpreter->Invoke();
 
-    Serial.print("\nX Value: ");
-    Serial.print(x_val);
-    Serial.print("\nResult: ");
-    Serial.print(result);
-    delay(200);
+		Result8 = output->data.int8[0];
+		Result = Result8 * output->params.scale;
+
+
+
 }

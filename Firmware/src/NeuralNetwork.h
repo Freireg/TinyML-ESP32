@@ -36,6 +36,8 @@ public:
     NeuralNetwork();
     float predict();
     void RunInference(void);
+    float Result;
+    int8_t Result8;
 };
 
 #endif
