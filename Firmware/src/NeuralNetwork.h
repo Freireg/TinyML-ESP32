@@ -2,7 +2,9 @@
 #define __NeuralNetwork__
 
 #include <stdint.h>
+#include <Arduino.h>
 
+#define kTensorArenaSize    2000
 namespace tflite
 {
     template <unsigned int tOpCount>
@@ -10,6 +12,8 @@ namespace tflite
     class ErrorReporter;
     class Model;
     class MicroInterpreter;
+
+    
 } // namespace tflite
 
 struct TfLiteTensor;
@@ -23,12 +27,15 @@ private:
     tflite::MicroInterpreter *interpreter = nullptr;
     TfLiteTensor *input = nullptr;
     TfLiteTensor *output = nullptr;
-    uint8_t *tensor_arena;
+	uint8_t tensor_arena[kTensorArenaSize];
+    int inference_count = 0;
 
 public:
+
     float *getInputBuffer();
     NeuralNetwork();
     float predict();
+    void RunInference(void);
 };
 
 #endif

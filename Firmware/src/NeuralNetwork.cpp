@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "NeuralNetwork.h"
 #include "model.h"
 #include "tensorflow/lite/micro/all_ops_resolver.h"
@@ -10,50 +11,49 @@ const int kArenaSize = 20 * 1024;
 
 NeuralNetwork::NeuralNetwork()
 {
-    error_reporter = new tflite::MicroErrorReporter();
+    	/* Set up logging. Google style is to avoid globals or statics because of
+	 * lifetime uncertainty, but since this has a trivial destructor it's okay.
+	 * NOLINTNEXTLINE(runtime-global-variables)
+	 */
+	static tflite::MicroErrorReporter micro_error_reporter;
 
-    model = tflite::GetModel(g_model);
-    if (model->version() != TFLITE_SCHEMA_VERSION)
-    {
-        TF_LITE_REPORT_ERROR(error_reporter, "Model provided is schema version %d not equal to supported version %d.",
-                             model->version(), TFLITE_SCHEMA_VERSION);
-        return;
-    }
-    // This pulls in the operators implementations we need
-    resolver = new tflite::MicroMutableOpResolver<10>();
-    resolver->AddFullyConnected();
-    resolver->AddMul();
-    resolver->AddAdd();
-    resolver->AddLogistic();
-    resolver->AddReshape();
-    resolver->AddQuantize();
-    resolver->AddDequantize();
+	error_reporter = &micro_error_reporter;
 
-    tensor_arena = (uint8_t *)malloc(kArenaSize);
-    if (!tensor_arena)
-    {
-        TF_LITE_REPORT_ERROR(error_reporter, "Could not allocate arena");
-        return;
-    }
+	/* Map the model into a usable data structure. This doesn't involve any
+	 * copying or parsing, it's a very lightweight operation.
+	 */
+	model = tflite::GetModel(g_model);
+	if (model->version() != TFLITE_SCHEMA_VERSION) {
+		TF_LITE_REPORT_ERROR(error_reporter,
+						"Model provided is schema version %d not equal "
+						"to supported version %d.",
+						model->version(), TFLITE_SCHEMA_VERSION);
+		return;
+	}
 
-    // Build an interpreter to run the model with.
-    interpreter = new tflite::MicroInterpreter(
-        model, *resolver, tensor_arena, kArenaSize, error_reporter);
+	/* This pulls in all the operation implementations we need.
+	 * NOLINTNEXTLINE(runtime-global-variables)
+	 */
+	static tflite::AllOpsResolver resolver;
 
-    // Allocate memory from the tensor_arena for the model's tensors.
-    TfLiteStatus allocate_status = interpreter->AllocateTensors();
-    if (allocate_status != kTfLiteOk)
-    {
-        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
-        return;
-    }
+	/* Build an interpreter to run the model with. */
+	static tflite::MicroInterpreter static_interpreter(
+		model, resolver, tensor_arena, kTensorArenaSize, error_reporter);
+	interpreter = &static_interpreter;
 
-    size_t used_bytes = interpreter->arena_used_bytes();
-    TF_LITE_REPORT_ERROR(error_reporter, "Used bytes %d\n", used_bytes);
+	/* Allocate memory from the tensor_arena for the model's tensors. */
+	TfLiteStatus allocate_status = interpreter->AllocateTensors();
+	if (allocate_status != kTfLiteOk) {
+		TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
+		return;
+	}
 
-    // Obtain pointers to the model's input and output tensors.
-    input = interpreter->input(0);
-    output = interpreter->output(0);
+	/* Obtain pointers to the model's input and output tensors. */
+	input = interpreter->input(0);
+	output = interpreter->output(0);
+
+	/* Keep track of how many inferences we have performed. */
+	inference_count = 0;
 }
 
 float *NeuralNetwork::getInputBuffer()
@@ -65,4 +65,24 @@ float NeuralNetwork::predict()
 {
     interpreter->Invoke();
     return output->data.f[0];
+}
+
+void NeuralNetwork::RunInference(void)
+{
+    float x_val = 2;
+    input->data.f[0];
+
+    TfLiteStatus InvokeStatus = interpreter->Invoke();
+    if (InvokeStatus != kTfLiteOk) {
+		TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed on x: %f\n",
+				     static_cast < double > (x_val));
+		return;
+	}
+    float result = output->data.f[0];
+
+    Serial.print("\nX Value: ");
+    Serial.print(x_val);
+    Serial.print("\nResult: ");
+    Serial.print(result);
+    delay(200);
 }
